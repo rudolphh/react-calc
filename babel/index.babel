@@ -1,0 +1,204 @@
+
+class Display extends React.Component {
+  constructor(props){
+    super(props);
+  }
+  render () {
+    return (
+      <div id='lcd'>
+        <div id='formula'>{this.props.formula.replace(/x/g, '*')}</div>
+        <div id='display'>{this.props.value}</div>
+      </div>
+    );
+  }
+}
+
+class Keypad extends React.Component {
+  constructor(props){
+    super(props);
+  }
+  render () {
+    return (
+      <div id='keypad'>
+        <button id='clear' onClick={this.props.clearHandler} >AC</button>
+        <button id='divide' onClick={this.props.operatorHandler} 
+          value='/'>/</button>
+        <button id='multiply' onClick={this.props.operatorHandler} 
+          value='x'>x</button>
+        <button id='seven' onClick={this.props.valueHandler} 
+          value='7'>7</button>
+        <button id='eight' onClick={this.props.valueHandler} 
+          value='8'>8</button>
+        <button id='nine' onClick={this.props.valueHandler} 
+          value='9'>9</button>
+        <button id='subtract' onClick={this.props.operatorHandler} 
+          value='-'>-</button>
+        <button id='four' onClick={this.props.valueHandler} 
+          value='4'>4</button>
+        <button id='five' onClick={this.props.valueHandler} 
+          value='5'>5</button>
+        <button id='six' onClick={this.props.valueHandler} 
+          value='6'>6</button>
+        <button id='add' onClick={this.props.operatorHandler} 
+          value='+'>+</button>
+        <button id='one' onClick={this.props.valueHandler} 
+          value='1'>1</button>
+        <button id='two' onClick={this.props.valueHandler} 
+          value='2'>2</button>
+        <button id='three' onClick={this.props.valueHandler} 
+          value='3'>3</button>
+        <button id='equals' onClick={this.props.resultHandler} 
+          value='='>=</button>
+        <button id='zero' onClick={this.props.valueHandler} 
+          value='0'>0</button>
+        <button id='decimal' onClick={this.props.decimalHandler} 
+          value='.'><strong>.</strong></button>
+  
+      </div>
+    );
+  }
+}
+
+const beginsWithOperator = /^[x\+\-\/\*]/,
+      hasOperator = /[x\+\-\/\*]/,
+      endsWithOperator = /[x\+\-\/\*]$/; 
+
+class Calculator extends React.Component { 
+  constructor (props) {
+    super(props);
+    this.state = { 
+      value: '0' ,
+      formula: '' ,
+      result: ''
+    };
+    this.handleClickNumber = this.handleClickNumber.bind(this);
+    this.handleClickClear = this.handleClickClear.bind(this);
+    this.handleClickOperator = this.handleClickOperator.bind(this);
+    this.handleClickDecimal = this.handleClickDecimal.bind(this);
+    this.handleClickResult = this.handleClickResult.bind(this);
+  }
+  
+  handleClickClear (event) {
+    this.setState({ value: '0', formula: '' , result: '' });
+  }
+  
+  handleClickNumber (event) { 
+
+    let currVal = this.state.value;
+    let currFormula = this.state.formula;
+    let result = this.state.result;
+    let numInput = event.target.value;
+    
+    if(currVal === '0' || result === currVal) {
+      this.setState({ 
+        value: numInput, 
+        formula: numInput==='0' ? '' : numInput ,
+        result: ''
+      });
+    }
+    else {
+      // TODOS right here with number limits
+      if(currVal.length === 25) { alert('max limit reached'); }
+      else if(!beginsWithOperator.test(currVal)){
+        this.setState({ 
+          value: currVal += numInput ,
+          formula : currFormula += numInput
+        });
+      }
+      else { 
+        this.setState({ 
+          value: numInput ,
+          formula : currFormula += numInput
+        });
+      }
+    }
+  }
+  
+  handleClickOperator (event) {
+
+    let currVal = this.state.value;
+    let currFormula = this.state.formula;
+    let operatorInput = event.target.value;
+    
+    const hasResult = /=/.test(currFormula);
+    
+    if(currVal !== '0' && !/^[x\/\+]/.test(currVal) && !/[\.]$/.test(currVal)){
+      this.setState({ 
+        value: operatorInput
+      }); 
+
+      if(!endsWithOperator.test(currFormula)){
+        this.setState({ 
+          formula : hasResult ? this.state.result += operatorInput : currFormula += operatorInput
+        });
+      }
+    }
+    
+    if(endsWithOperator.test(currFormula)){
+      currFormula = currFormula.slice(0, -1);
+      this.setState({ 
+        value: operatorInput ,
+        formula: currFormula += operatorInput
+      }); 
+    }
+    
+  }// end handleClickOperator
+  
+  handleClickDecimal () {
+    let currVal = this.state.value;
+    let currFormula = this.state.formula;
+    const endsWithOp = endsWithOperator.test(currFormula);
+    const hasResult = (currVal === this.state.result);
+
+    if(!(/\./.test(currVal))){
+
+      if(currVal === '0'){
+        this.setState ({
+          value: hasOperator.test(currVal) ? '0.' : currVal += '.' ,
+          formula:  endsWithOp ? currFormula += '.' : currFormula += '0.'
+        });        
+      } else {
+        this.setState ({
+          value: hasOperator.test(currVal) ? '0.' : currVal += '.' ,
+          formula:  endsWithOp ? currFormula += '0.' : currFormula += '.'
+        });
+      }
+    }
+  }
+  
+  handleClickResult(){
+    let currVal = this.state.value;
+    let currFormula = this.state.formula.replace(/x/g, '*');
+    const endsWithOp = endsWithOperator.test(currFormula);
+    const hasResult = (currVal === this.state.result);
+    const endsWithDot = /[\.]$/.test(currVal);
+    
+    if(currVal !== '0' && !endsWithOp && !endsWithDot && !hasResult){
+      let result = eval(currFormula);
+      this.setState({
+        value:  result ,
+        formula: currFormula += '=' + result ,
+        result: result
+      });
+    }
+    
+  }
+  
+  render () {
+    return (
+      <div id="calculator">
+        <Display value={this.state.value} 
+                 formula={this.state.formula} 
+        />
+        <Keypad valueHandler={this.handleClickNumber}
+                clearHandler={this.handleClickClear}
+                operatorHandler={this.handleClickOperator}
+                decimalHandler={this.handleClickDecimal}
+                resultHandler={this.handleClickResult}
+        />
+      </div>
+    );
+  }
+}
+
+ReactDOM.render(<Calculator />, document.getElementById('root'));
