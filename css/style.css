@@ -66,6 +66,7 @@ button {
   height: 68px;
   font-size: 16px;
   font-family: 'Orbitron', sans-serif;
+  cursor: pointer;
 }
 
 #clear, #zero {
